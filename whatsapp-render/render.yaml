@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: csonic-whatsapp-bot
+    env: node
+    rootDir: .
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        sync: false
+      - key: VERIFY_TOKEN
+        value: csonic123
+

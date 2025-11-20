@@ -1,0 +1,22 @@
+{
+  "name": "whatsapp-render",
+  "version": "1.0.0",
+"description": "Minimal WhatsApp Cloud API webhook ready for Render deployment",
+"main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cross-env NODE_ENV=development node server.js"
+  },
+  "keywords": [],
+  "author": "",
+"license": "MIT",
+"type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
