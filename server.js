@@ -22,42 +22,51 @@ app.get('/webhook', (req, res) => {
   return res.status(403).send('Forbidden');
 });
 
-app.post('/webhook', async (req, res) => {
-  try {
-    const entry = req.body.entry?.[0];
-    const change = entry?.changes?.[0];
-    const message = change?.value?.messages?.[0];
+const sendMessage = async (to, text) => {
+  await axios.post(
+    `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`,
+    {
+      messaging_product: 'whatsapp',
+      to,
+      type: 'text',
+      text: { body: text },
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
 
-    if (!message) {
-      console.log('POST /webhook: No message payload detected');
-      return res.sendStatus(200);
-    }
+app.post('/webhook', (req, res) => {
+  console.log('Webhook received');
 
+  const body = req.body;
+  console.log('Incoming webhook body:', JSON.stringify(body, null, 2));
+
+  if (
+    body.object &&
+    body.entry &&
+    body.entry[0].changes &&
+    body.entry[0].changes[0].value &&
+    body.entry[0].changes[0].value.messages &&
+    body.entry[0].changes[0].value.messages[0]
+  ) {
+    const message = body.entry[0].changes[0].value.messages[0];
     const from = message.from;
-    const text = message.text?.body || '';
-    console.log(`Incoming message from ${from}: ${text}`);
+    const text = message.text?.body;
 
-    await axios.post(
-      `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`,
-      {
-        messaging_product: 'whatsapp',
-        to: from,
-        type: 'text',
-        text: { body: `Hi! Your message was received: ${text}` },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    console.log('User number:', from);
+    console.log('User message:', text);
 
-    res.sendStatus(200);
-  } catch (error) {
-    console.error('Error handling webhook POST', error.response?.data || error.message);
-    res.sendStatus(500);
+    sendMessage(from, `You said: ${text}`);
+  } else {
+    console.log('No valid message found in webhook');
   }
+
+  res.sendStatus(200);
 });
 
 app.listen(PORT, () => {
