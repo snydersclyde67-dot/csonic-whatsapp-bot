@@ -122,6 +122,31 @@ CREATE TABLE IF NOT EXISTS faq_rules (
     FOREIGN KEY (business_id) REFERENCES businesses(id)
 );
 
+-- Users Table (dashboard/admin accounts)
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    role TEXT DEFAULT 'admin',
+    password_hash TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses(id)
+);
+
+-- Settings Table (per-business configuration)
+CREATE TABLE IF NOT EXISTS settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(business_id, key),
+    FOREIGN KEY (business_id) REFERENCES businesses(id)
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_businesses_type ON businesses(type);
 CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone_number);

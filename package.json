@@ -4,8 +4,11 @@
   "description": "CSonic - Modular WhatsApp Business Bot System for South African Small Businesses",
   "main": "app.js",
   "scripts": {
+    "prestart": "node migrate.js",
     "start": "node server.js",
+    "predev": "node migrate.js",
     "dev": "nodemon server.js",
+    "migrate": "node migrate.js",
     "init-db": "node database/init.js",
     "seed": "node database/seed.js"
   },
