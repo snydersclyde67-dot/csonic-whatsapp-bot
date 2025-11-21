@@ -8,6 +8,8 @@ const router = express.Router();
 const { parseMessage } = require('../services/messageParser');
 const { getAIResponse } = require('../services/aiService');
 const { sendWhatsAppMessage, saveMessage } = require('../modules/generic');
+const { listBots } = require('../services/botRegistry');
+const whatsappConfig = require('../config/whatsapp');
 
 /**
  * Webhook verification (GET)
@@ -17,7 +19,7 @@ router.get('/webhook/whatsapp', (req, res) => {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+    const verifyToken = whatsappConfig.verifyToken;
 
     if (mode === 'subscribe' && token === verifyToken) {
         console.log('Webhook verified');
@@ -203,6 +205,16 @@ router.post('/api/messages/broadcast', async (req, res) => {
         console.error('Error sending broadcast:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+/**
+ * Inspect registered bot modules
+ */
+router.get('/api/bots', (req, res) => {
+    res.json({
+        success: true,
+        bots: listBots()
+    });
 });
 
 module.exports = router;

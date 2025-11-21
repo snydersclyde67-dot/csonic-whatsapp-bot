@@ -4,6 +4,7 @@
  */
 
 const db = require('../database/db');
+const whatsappConfig = require('../config/whatsapp');
 
 /**
  * Get business information
@@ -91,8 +92,7 @@ async function saveMessage(businessId, customerId, messageText, direction = 'inc
  */
 async function sendWhatsAppMessage(to, message, businessId = null) {
     const axios = require('axios');
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const { accessToken, phoneNumberId, apiVersion, graphBaseUrl } = whatsappConfig;
 
     if (!accessToken || !phoneNumberId) {
         console.error('WhatsApp credentials not configured');
@@ -101,7 +101,7 @@ async function sendWhatsAppMessage(to, message, businessId = null) {
 
     try {
         const response = await axios.post(
-            `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+            `${graphBaseUrl}/${apiVersion}/${phoneNumberId}/messages`,
             {
                 messaging_product: 'whatsapp',
                 to: to,

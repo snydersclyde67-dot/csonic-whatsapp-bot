@@ -3,19 +3,8 @@
  * Routes messages to appropriate business modules
  */
 
-const { findBusinessByPhone, getBusinessInfo } = require('../modules/generic');
-const barberModule = require('../modules/barber');
-const carwashModule = require('../modules/carwash');
-const spazaModule = require('../modules/spaza');
-
-/**
- * Business type to module mapping
- */
-const businessModules = {
-    barber: barberModule,
-    carwash: carwashModule,
-    spaza: spazaModule
-};
+const { findBusinessByPhone, getOrCreateCustomer } = require('../modules/generic');
+const { getBotHandler } = require('./botRegistry');
 
 /**
  * Parse and route incoming message
@@ -34,11 +23,10 @@ async function parseMessage(from, messageText) {
         }
 
         // Get or create customer
-        const { getOrCreateCustomer } = require('../modules/generic');
         const customer = await getOrCreateCustomer(from, business.id);
 
         // Get the appropriate module
-        const module = businessModules[business.type];
+        const module = getBotHandler(business.type);
         
         if (!module) {
             return {
@@ -93,7 +81,6 @@ function detectLanguage(messageText) {
 
 module.exports = {
     parseMessage,
-    detectLanguage,
-    businessModules
+    detectLanguage
 };
 
