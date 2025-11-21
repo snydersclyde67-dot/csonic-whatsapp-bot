@@ -10,6 +10,8 @@
     "migrate": "node database/migrate.js",
     "init-db": "node database/init.js",
     "seed": "node database/seed.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
-
