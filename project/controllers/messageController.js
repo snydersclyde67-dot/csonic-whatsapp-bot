@@ -1,4 +1,4 @@
-const whatsappService = require('../services/whatsappService');
+const router = require('../core/router');
 const logger = require('../utils/logger');
 
 const extractMessage = (payload) => {
@@ -16,9 +16,22 @@ const extractMessage = (payload) => {
   const change = payload.entry[0].changes[0];
   const message = change.value.messages[0];
   const from = message.from;
-  const text = message.text && message.text.body ? message.text.body : '';
 
-  return { from, text };
+  const text =
+    message.text?.body ||
+    message.button?.text ||
+    message.interactive?.button_reply?.title ||
+    message.interactive?.list_reply?.title ||
+    '';
+
+  const buttonId =
+    message.button?.payload ||
+    message.button?.text ||
+    message.interactive?.button_reply?.id ||
+    message.interactive?.list_reply?.id ||
+    null;
+
+  return { from, text, buttonId };
 };
 
 const handleIncomingMessage = async (payload) => {
@@ -30,9 +43,7 @@ const handleIncomingMessage = async (payload) => {
   }
 
   logger(`Incoming message from ${incoming.from}: ${incoming.text}`);
-
-  const reply = `Hi! Your message was received: ${incoming.text}`;
-  await whatsappService.sendMessage(incoming.from, reply);
+  await router.handleIncomingPayload(incoming);
 };
 
 module.exports = {
