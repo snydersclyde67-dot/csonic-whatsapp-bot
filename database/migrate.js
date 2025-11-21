@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const DEFAULT_DB_PATH = path.join(__dirname, 'database', 'businesses.db');
+const DEFAULT_DB_PATH = path.join(__dirname, 'businesses.db');
 const DB_PATH = process.env.DB_PATH || DEFAULT_DB_PATH;
-const SCHEMA_PATH = path.join(__dirname, 'database', 'schema.sql');
+const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 function ensureDatabaseFile() {
   const dir = path.dirname(DB_PATH);

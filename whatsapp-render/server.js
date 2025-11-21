@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const VERIFY_TOKEN = 'csonic123';
+const VERIFY_TOKEN = 'csonic-verify-token';
 
 app.use(cors());
 app.use(bodyParser.json());
