@@ -8,12 +8,13 @@ const router = express.Router();
 const db = require('../database/db');
 const { getBookings, createBooking, updateBookingStatus } = require('../modules/booking');
 const { getProducts, createOrder, getOrders, updateOrderStatus } = require('../modules/products');
-const { getAllBusinesses, getBusinessInfo } = require('../modules/generic');
+const { getAllBusinesses, getBusinessInfo, sendWhatsAppMessage } = require('../modules/generic');
+const { listBots } = require('../services/botRegistry');
 
 /**
  * Get all businesses
  */
-router.get('/api/businesses', async (req, res) => {
+router.get('/businesses', async (req, res) => {
     try {
         const businesses = await getAllBusinesses();
         res.json(businesses);
@@ -26,7 +27,7 @@ router.get('/api/businesses', async (req, res) => {
 /**
  * Get business by ID
  */
-router.get('/api/businesses/:id', async (req, res) => {
+router.get('/businesses/:id', async (req, res) => {
     try {
         const business = await getBusinessInfo(parseInt(req.params.id));
         if (!business) {
@@ -42,7 +43,7 @@ router.get('/api/businesses/:id', async (req, res) => {
 /**
  * Create new business
  */
-router.post('/api/businesses', async (req, res) => {
+router.post('/businesses', async (req, res) => {
     try {
         const { name, type, phone_number, whatsapp_number, location, language, operating_hours, ai_enabled } = req.body;
 
@@ -82,7 +83,7 @@ router.post('/api/businesses', async (req, res) => {
 /**
  * Update business
  */
-router.put('/api/businesses/:id', async (req, res) => {
+router.put('/businesses/:id', async (req, res) => {
     try {
         const { name, type, phone_number, whatsapp_number, location, language, operating_hours, ai_enabled } = req.body;
 
@@ -151,7 +152,7 @@ router.put('/api/businesses/:id', async (req, res) => {
 /**
  * Delete business
  */
-router.delete('/api/businesses/:id', async (req, res) => {
+router.delete('/businesses/:id', async (req, res) => {
     try {
         await new Promise((resolve, reject) => {
             db.run(
@@ -174,7 +175,7 @@ router.delete('/api/businesses/:id', async (req, res) => {
 /**
  * Get bookings
  */
-router.get('/api/bookings', async (req, res) => {
+router.get('/bookings', async (req, res) => {
     try {
         const { businessId, status, date, dateFrom } = req.query;
         const filters = {};
@@ -201,7 +202,7 @@ router.get('/api/bookings', async (req, res) => {
 /**
  * Create booking
  */
-router.post('/api/bookings', async (req, res) => {
+router.post('/bookings', async (req, res) => {
     try {
         const { businessId, customerId, serviceId, bookingDate, bookingTime, notes } = req.body;
 
@@ -220,7 +221,7 @@ router.post('/api/bookings', async (req, res) => {
 /**
  * Update booking status
  */
-router.put('/api/bookings/:id', async (req, res) => {
+router.put('/bookings/:id', async (req, res) => {
     try {
         const { status } = req.body;
 
@@ -239,7 +240,7 @@ router.put('/api/bookings/:id', async (req, res) => {
 /**
  * Get orders
  */
-router.get('/api/orders', async (req, res) => {
+router.get('/orders', async (req, res) => {
     try {
         const { businessId, status, customerId } = req.query;
 
@@ -262,7 +263,7 @@ router.get('/api/orders', async (req, res) => {
 /**
  * Update order status
  */
-router.put('/api/orders/:id', async (req, res) => {
+router.put('/orders/:id', async (req, res) => {
     try {
         const { status } = req.body;
 
@@ -281,7 +282,7 @@ router.put('/api/orders/:id', async (req, res) => {
 /**
  * Get services
  */
-router.get('/api/services', async (req, res) => {
+router.get('/services', async (req, res) => {
     try {
         const { businessId } = req.query;
 
@@ -310,7 +311,7 @@ router.get('/api/services', async (req, res) => {
 /**
  * Get products
  */
-router.get('/api/products', async (req, res) => {
+router.get('/products', async (req, res) => {
     try {
         const { businessId, category, inStock } = req.query;
 
@@ -333,7 +334,7 @@ router.get('/api/products', async (req, res) => {
 /**
  * Get messages
  */
-router.get('/api/messages', async (req, res) => {
+router.get('/messages', async (req, res) => {
     try {
         const { businessId, customerId, limit = 50 } = req.query;
 
@@ -369,6 +370,111 @@ router.get('/api/messages', async (req, res) => {
         console.error('Error fetching messages:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+/**
+ * Send message manually (for testing/admin)
+ */
+router.post('/messages/send', async (req, res) => {
+    try {
+        const { to, message, businessId } = req.body;
+
+        if (!to || !message) {
+            return res.status(400).json({ error: 'Missing required fields: to, message' });
+        }
+
+        const result = await sendWhatsAppMessage(to, message, businessId || null);
+
+        if (result.success) {
+            res.json({ success: true });
+        } else {
+            res.status(500).json({ success: false, error: result.error });
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * Send broadcast message
+ */
+router.post('/messages/broadcast', async (req, res) => {
+    try {
+        const { businessId, message, targetAudience = 'all' } = req.body;
+
+        if (!businessId || !message) {
+            return res.status(400).json({ error: 'Missing required fields: businessId, message' });
+        }
+
+        const db = require('../database/db');
+
+        const customers = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT DISTINCT phone_number FROM customers WHERE business_id = ?`,
+                [businessId],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+
+        const broadcastId = await new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO broadcasts (business_id, message_text, target_audience, status)
+                 VALUES (?, ?, ?, 'sending')`,
+                [businessId, message, targetAudience],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                }
+            );
+        });
+
+        const results = [];
+        let sentCount = 0;
+
+        for (const customer of customers) {
+            try {
+                const result = await sendWhatsAppMessage(customer.phone_number, message, businessId);
+                if (result.success) {
+                    sentCount++;
+                }
+                results.push({ to: customer.phone_number, success: result.success });
+            } catch (error) {
+                console.error(`Error sending to ${customer.phone_number}:`, error);
+                results.push({ to: customer.phone_number, success: false, error: error.message });
+            }
+        }
+
+        db.run(
+            `UPDATE broadcasts SET status = 'sent', sent_count = ? WHERE id = ?`,
+            [sentCount, broadcastId],
+            () => {}
+        );
+
+        res.json({
+            success: true,
+            broadcastId,
+            total: customers.length,
+            sent: sentCount,
+            results,
+        });
+    } catch (error) {
+        console.error('Error sending broadcast:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * Inspect registered bot modules
+ */
+router.get('/bots', (req, res) => {
+    res.json({
+        success: true,
+        bots: listBots(),
+    });
 });
 
 module.exports = router;

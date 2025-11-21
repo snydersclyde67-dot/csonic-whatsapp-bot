@@ -1,11 +1,12 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const whatsappConfig = require('../config/whatsapp');
 
-const BASE_URL = 'https://graph.facebook.com/v20.0';
+const BASE_URL = `${whatsappConfig.graphBaseUrl}/${whatsappConfig.apiVersion}`;
 
 const sendMessage = async (to, text) => {
-  const token = process.env.WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.PHONE_NUMBER_ID;
+  const token = whatsappConfig.token;
+  const phoneNumberId = whatsappConfig.phoneNumberId;
 
   if (!token || !phoneNumberId) {
     throw new Error('Missing WhatsApp credentials');
@@ -28,6 +29,7 @@ const sendMessage = async (to, text) => {
       },
     });
     logger(`Reply sent to ${to}`);
+    return { success: true };
   } catch (error) {
     logger('Failed to send WhatsApp message', error.response?.data || error.message);
     throw error;
@@ -47,8 +49,8 @@ const sendInteractiveMessage = async (to, bodyText, buttons) => {
     },
   }));
 
-  const token = process.env.WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.PHONE_NUMBER_ID;
+  const token = whatsappConfig.token;
+  const phoneNumberId = whatsappConfig.phoneNumberId;
 
   if (!token || !phoneNumberId) {
     throw new Error('Missing WhatsApp credentials');
@@ -75,6 +77,7 @@ const sendInteractiveMessage = async (to, bodyText, buttons) => {
       },
     });
     logger(`Interactive reply sent to ${to}`);
+    return { success: true };
   } catch (error) {
     logger('Failed to send interactive WhatsApp message', error.response?.data || error.message);
     throw error;

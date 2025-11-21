@@ -12,9 +12,9 @@ npm install
 Create a `.env` file in the `csonic-bot` directory:
 ```env
 # WhatsApp Cloud API (Required for production, optional for testing)
-WHATSAPP_ACCESS_TOKEN=your_token_here
-WHATSAPP_PHONE_NUMBER_ID=your_number_id_here
-WHATSAPP_VERIFY_TOKEN=your_verify_token_here
+WHATSAPP_TOKEN=your_token_here
+PHONE_NUMBER_ID=your_number_id_here
+VERIFY_TOKEN=your_verify_token_here
 WHATSAPP_API_VERSION=v18.0
 
 # Server
@@ -139,7 +139,7 @@ https://your-domain.com/webhook/whatsapp
 ```
 
 ### 3. Verify Token
-Use the same `WHATSAPP_VERIFY_TOKEN` from your `.env` file
+Use the same `VERIFY_TOKEN` from your `.env` file
 
 ### 4. Subscribe to Events
 Subscribe to `messages` events in webhook settings

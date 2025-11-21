@@ -47,7 +47,7 @@ Complete step-by-step instructions to connect CSonic with WhatsApp Business API.
 1. In the WhatsApp section, go to **"API Setup"** tab
 2. You'll see **"Phone number ID"** - **COPY THIS NUMBER**
    - It looks like: `123456789012345`
-   - This is your `WHATSAPP_PHONE_NUMBER_ID`
+   - This is your `PHONE_NUMBER_ID`
 
 ### B. Get Access Token
 
@@ -55,7 +55,7 @@ Complete step-by-step instructions to connect CSonic with WhatsApp Business API.
 2. Find **"Temporary access token"** section
 3. Click **"Generate token"** or copy the existing token
 4. **COPY THIS TOKEN** (it's long, starts with something like `EAAB...`)
-   - This is your `WHATSAPP_ACCESS_TOKEN`
+   - This is your `WHATSAPP_TOKEN`
    - ⚠️ **Note**: Temporary tokens expire in 24 hours. You'll need a permanent token (see Step 7)
 
 ### C. Set Webhook Verify Token
@@ -75,9 +75,9 @@ Complete step-by-step instructions to connect CSonic with WhatsApp Business API.
 Open `csonic-bot/.env` and update these values:
 
 ```env
-WHATSAPP_ACCESS_TOKEN=EAABwzLixnjYBO7... (your token here)
-WHATSAPP_PHONE_NUMBER_ID=123456789012345 (your phone number ID)
-WHATSAPP_VERIFY_TOKEN=csonic_verify_token_12345 (the token you created)
+WHATSAPP_TOKEN=EAABwzLixnjYBO7... (your token here)
+PHONE_NUMBER_ID=123456789012345 (your phone number ID)
+VERIFY_TOKEN=csonic_verify_token_12345 (the token you created)
 WHATSAPP_API_VERSION=v18.0
 ```
 

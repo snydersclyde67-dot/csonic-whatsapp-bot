@@ -304,6 +304,57 @@ module.exports = {
     getServices,
     formatServicesList,
     getQueueStatus,
-    handleMessage
+    handleMessage,
+    startInteractiveFlow,
+    handleInteractiveStep
 };
+
+const carwashPackages = [
+    { id: 'carwash_basic', label: 'Basic Wash' },
+    { id: 'carwash_deluxe', label: 'Deluxe Wash' },
+    { id: 'carwash_detail', label: 'Detailing' }
+];
+
+function startInteractiveFlow() {
+    return {
+        message: '🚗 Choose a car wash package:',
+        nextStep: 'selectPackage',
+        buttons: carwashPackages.map(pkg => ({ id: pkg.id, title: pkg.label }))
+    };
+}
+
+function handleInteractiveStep(input, state) {
+    if (state.step === 'selectPackage') {
+        const normalized = input.toLowerCase();
+        const selected = carwashPackages.find(pkg => pkg.id === normalized);
+        state.data.package = selected ? selected.label : input;
+        return {
+            message: 'Awesome choice! Where should we meet your car? (send suburb or location pin)',
+            nextStep: 'collectLocation'
+        };
+    }
+
+    if (state.step === 'collectLocation') {
+        state.data.location = input;
+        return {
+            message: 'Noted. When should we be there? (e.g. Saturday 10am)',
+            nextStep: 'collectTime'
+        };
+    }
+
+    if (state.step === 'collectTime') {
+        state.data.time = input;
+        const { package: pkg, location, time } = state.data;
+        return {
+            message: `🧽 Car wash scheduled!\n• Package: ${pkg}\n• Location: ${location}\n• Time: ${time}\n\nWe’ll send a confirmation soon.`,
+            done: true
+        };
+    }
+
+    return {
+        message: 'Let’s restart your car wash request. Pick a package to continue:',
+        nextStep: 'selectPackage',
+        buttons: carwashPackages.map(pkg => ({ id: pkg.id, title: pkg.label }))
+    };
+}
 

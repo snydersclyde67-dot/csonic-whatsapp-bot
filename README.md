@@ -30,9 +30,9 @@ cp .env.example .env
 ```
 
 Edit `.env` with your credentials:
-- `WHATSAPP_ACCESS_TOKEN` - From Meta Business Suite
-- `WHATSAPP_PHONE_NUMBER_ID` - Your WhatsApp Business Phone Number ID
-- `WHATSAPP_VERIFY_TOKEN` - A random string for webhook verification
+- `WHATSAPP_TOKEN` - From Meta Business Suite
+- `PHONE_NUMBER_ID` - Your WhatsApp Business Phone Number ID
+- `VERIFY_TOKEN` - A random string for webhook verification
 
 ### 3. Initialize Database
 
@@ -67,7 +67,7 @@ The server will run on `http://localhost:3000`
 
 ### 6. Access Admin Dashboard
 
-Open `http://localhost:3000/dashboard` in your browser.
+Open `http://localhost:3000/admin` in your browser.
 
 ## WhatsApp Webhook Setup
 
@@ -80,7 +80,7 @@ https://your-domain.com/webhook/whatsapp
 
 ### 2. Verify Token
 
-Use the same `WHATSAPP_VERIFY_TOKEN` from your `.env` file.
+Use the same `VERIFY_TOKEN` from your `.env` file.
 
 ### 3. Subscribe to Messages
 

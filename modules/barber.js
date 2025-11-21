@@ -274,9 +274,50 @@ async function handleViewBookings(business, customer, language) {
     return response;
 }
 
+function startInteractiveFlow() {
+    return {
+        message: '💈 Barber bookings: please share your preferred date (YYYY-MM-DD). Reply "menu" to exit.',
+        nextStep: 'collectDate'
+    };
+}
+
+function handleInteractiveStep(input, state) {
+    if (state.step === 'collectDate') {
+        state.data.date = input;
+        return {
+            message: 'Great! What time works best for that day? (e.g. 14:30)',
+            nextStep: 'collectTime'
+        };
+    }
+
+    if (state.step === 'collectTime') {
+        state.data.time = input;
+        return {
+            message: 'Got it. Any style preference? (fade, beard trim, etc.)',
+            nextStep: 'collectStyle'
+        };
+    }
+
+    if (state.step === 'collectStyle') {
+        state.data.style = input;
+        const { date, time, style } = state.data;
+        return {
+            message: `✅ Booking request received!\n• Date: ${date}\n• Time: ${time}\n• Style: ${style}\n\nOur team will confirm shortly.`,
+            done: true
+        };
+    }
+
+    return {
+        message: 'Let’s start again. What date suits you for the barber booking?',
+        nextStep: 'collectDate'
+    };
+}
+
 module.exports = {
     getServices,
     formatServicesList,
-    handleMessage
+    handleMessage,
+    startInteractiveFlow,
+    handleInteractiveStep
 };
 

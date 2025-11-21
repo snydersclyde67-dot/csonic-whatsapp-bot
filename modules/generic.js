@@ -4,7 +4,7 @@
  */
 
 const db = require('../database/db');
-const whatsappConfig = require('../config/whatsapp');
+const whatsappService = require('../services/whatsappService');
 
 /**
  * Get business information
@@ -91,40 +91,33 @@ async function saveMessage(businessId, customerId, messageText, direction = 'inc
  * Send WhatsApp message
  */
 async function sendWhatsAppMessage(to, message, businessId = null) {
-    const axios = require('axios');
-    const { accessToken, phoneNumberId, apiVersion, graphBaseUrl } = whatsappConfig;
-
-    if (!accessToken || !phoneNumberId) {
-        console.error('WhatsApp credentials not configured');
-        return { success: false, error: 'WhatsApp not configured' };
-    }
-
     try {
-        const response = await axios.post(
-            `${graphBaseUrl}/${apiVersion}/${phoneNumberId}/messages`,
-            {
-                messaging_product: 'whatsapp',
-                to: to,
-                type: 'text',
-                text: { body: message }
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
+        const result = await whatsappService.sendMessage(to, message);
 
-        // Save outgoing message if businessId provided
         if (businessId) {
             const customer = await getOrCreateCustomer(to, businessId);
             await saveMessage(businessId, customer.id, message, 'outgoing');
         }
 
-        return { success: true, data: response.data };
+        return result;
     } catch (error) {
         console.error('Error sending WhatsApp message:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data || error.message };
+    }
+}
+
+async function sendInteractiveWhatsAppMessage(to, bodyText, buttons, businessId = null) {
+    try {
+        const result = await whatsappService.sendInteractiveMessage(to, bodyText, buttons);
+
+        if (businessId) {
+            const customer = await getOrCreateCustomer(to, businessId);
+            await saveMessage(businessId, customer.id, bodyText, 'outgoing');
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Error sending interactive WhatsApp message:', error.response?.data || error.message);
         return { success: false, error: error.response?.data || error.message };
     }
 }
@@ -249,6 +242,7 @@ module.exports = {
     getOrCreateCustomer,
     saveMessage,
     sendWhatsAppMessage,
+    sendInteractiveWhatsAppMessage,
     getGreeting,
     getOperatingHours,
     findBusinessByPhone,

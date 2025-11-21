@@ -1,75 +1,41 @@
+const path = require('path');
 const express = require('express');
-const axios = require('axios');
+const cors = require('cors');
 const dotenv = require('dotenv');
+const logger = require('./utils/logger');
 
 dotenv.config();
+
+require('./database/db');
+
+const whatsappRouter = require('./routes/whatsapp');
+const businessRouter = require('./routes/business');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
+app.use('/webhook', whatsappRouter);
+app.use('/api', businessRouter);
 
-  if (mode && token && mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-    console.log('Webhook verified');
-    return res.status(200).send(challenge);
-  }
-
-  return res.status(403).send('Forbidden');
+app.use('/admin', express.static(path.join(__dirname, 'dashboard')));
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
 });
 
-const sendMessage = async (to, text) => {
-  await axios.post(
-    `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`,
-    {
-      messaging_product: 'whatsapp',
-      to,
-      type: 'text',
-      text: { body: text },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-};
+app.get('/', (req, res) => {
+  res.json({ status: 'CSonic WhatsApp bot is running.' });
+});
 
-app.post('/webhook', (req, res) => {
-  console.log('Webhook received');
-
-  const body = req.body;
-  console.log('Incoming webhook body:', JSON.stringify(body, null, 2));
-
-  if (
-    body.object &&
-    body.entry &&
-    body.entry[0].changes &&
-    body.entry[0].changes[0].value &&
-    body.entry[0].changes[0].value.messages &&
-    body.entry[0].changes[0].value.messages[0]
-  ) {
-    const message = body.entry[0].changes[0].value.messages[0];
-    const from = message.from;
-    const text = message.text?.body;
-
-    console.log('User number:', from);
-    console.log('User message:', text);
-
-    sendMessage(from, `You said: ${text}`);
-  } else {
-    console.log('No valid message found in webhook');
-  }
-
-  res.sendStatus(200);
+app.use((err, req, res, next) => {
+  logger('Unhandled error', err.message || err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  logger(`Server listening on port ${PORT}`);
 });
 
