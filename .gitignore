@@ -31,3 +31,6 @@ build/
 tmp/
 temp/
 
+# Ignore whatsapp-render folder (legacy, not used for deployment)
+whatsapp-render/
+

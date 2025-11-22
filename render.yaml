@@ -9,11 +9,14 @@ services:
     region: frankfurt
     runtime: node
     branch: main
+    rootDir: .
     envVars:
       - key: NODE_VERSION
         value: 18
       - key: PORT
         value: 10000
+      - key: NODE_ENV
+        value: production
       - key: WHATSAPP_TOKEN
         sync: false
       - key: PHONE_NUMBER_ID
@@ -22,4 +25,6 @@ services:
         sync: false
       - key: DB_PATH
         value: ./database/businesses.db
+      - key: WHATSAPP_API_VERSION
+        value: v18.0
 
