@@ -55,7 +55,8 @@ You **MUST** set these environment variables in Render Dashboard → Environment
 ### 🔒 Security Notes
 - **NEVER** commit `.env` files to Git
 - Use Render's secure environment variable storage
-- Keep `VERIFY_TOKEN` secret and consistent between Meta and Render
+- Keep `npm install express body-parser cors dotenv sqlite3 axios
+VERIFY_TOKEN` secret and consistent between Meta and Render
 - Remove any sensitive tokens from `env.example` before committing
 
 ---
